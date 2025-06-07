@@ -1,0 +1,17 @@
+{
+	"name": "BREED_DIM_IMPORT",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "BREED_DIM",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "SnowflakeV2Table",
+		"schema": [],
+		"typeProperties": {
+			"schema": "TEMP_SCHEMA",
+			"table": "BREED_DIM"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

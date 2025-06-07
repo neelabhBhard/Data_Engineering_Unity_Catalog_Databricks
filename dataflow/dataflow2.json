@@ -1,0 +1,193 @@
+{
+	"name": "dataflow2",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "SnowflakeTable5",
+						"type": "DatasetReference"
+					},
+					"name": "V2STAGEPETLIC"
+				},
+				{
+					"dataset": {
+						"referenceName": "SnowflakeTable8",
+						"type": "DatasetReference"
+					},
+					"name": "LOCATIONDIM"
+				},
+				{
+					"dataset": {
+						"referenceName": "BREED_DIM_IMPORT",
+						"type": "DatasetReference"
+					},
+					"name": "BREEDDIM"
+				},
+				{
+					"dataset": {
+						"referenceName": "FCT_TABLE_IMPORT",
+						"type": "DatasetReference"
+					},
+					"name": "MAXPETSK"
+				},
+				{
+					"dataset": {
+						"referenceName": "DATE_DIM_IMPORT",
+						"type": "DatasetReference"
+					},
+					"name": "DATEDIM"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "FCT_TABLE_IMPORT",
+						"type": "DatasetReference"
+					},
+					"name": "SinkintoFACT"
+				}
+			],
+			"transformations": [
+				{
+					"name": "JoiningLocation"
+				},
+				{
+					"name": "joinbreed"
+				},
+				{
+					"name": "joiningDate"
+				},
+				{
+					"name": "CrossJoin"
+				},
+				{
+					"name": "selectColumns1"
+				},
+				{
+					"name": "surrogateKey1"
+				},
+				{
+					"name": "derivedColumn1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          LIC_ISSUE_DATE as date,",
+				"          SECONDARY_BREED as string,",
+				"          ZIP_CODE as string,",
+				"          SPECIES as string,",
+				"          LICENSE_NUMBER as string,",
+				"          ANIMAL_NAME as string,",
+				"          JOB_EXC_ID as string,",
+				"          JOB_EXC_DT as date,",
+				"          PRIMARY_BREED as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table') ~> V2STAGEPETLIC",
+				"source(output(",
+				"          LOCATION_SK as decimal(10,0),",
+				"          CITY as string,",
+				"          STATE as string,",
+				"          ZIP as string,",
+				"          DI_JOB_ID as string,",
+				"          DI_CREATED_DT as date",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table') ~> LOCATIONDIM",
+				"source(output(",
+				"          BREED_SK as decimal(38,0),",
+				"          SPECIES as string,",
+				"          PRIMARY_BREED as string,",
+				"          SECONDARY_BREED as string,",
+				"          DI_JOB_ID as string,",
+				"          DI_CREATED_DT as date",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table') ~> BREEDDIM",
+				"source(output(",
+				"          MAXPETSK as decimal(10,0)",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     query: 'SELECT NVL(MAX(PET_LIC_SK),0) as MaxpetSK FROM TEMP_SCHEMA.PET_LIC_FCT',",
+				"     format: 'query') ~> MAXPETSK",
+				"source(output(",
+				"          DT as date,",
+				"          ABRV_DAY_NAME as string,",
+				"          MONTH_NAME as string,",
+				"          START_DAY_OF_MONTH as date,",
+				"          END_DAY_OF_MONTH as date,",
+				"          QUARTER_NUM as decimal(2,0),",
+				"          DAY_OF_WEEK as decimal(2,0),",
+				"          IS_WEEKEND as decimal(1,0),",
+				"          YEAR_NUM as decimal(4,0),",
+				"          MONTH_NUM as decimal(2,0),",
+				"          DAY_NUM as decimal(2,0),",
+				"          DATE_DIM_SK as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table') ~> DATEDIM",
+				"V2STAGEPETLIC, LOCATIONDIM join(ZIP_CODE == ZIP,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> JoiningLocation",
+				"JoiningLocation, BREEDDIM join(V2STAGEPETLIC@SECONDARY_BREED == BREEDDIM@SECONDARY_BREED",
+				"     && V2STAGEPETLIC@PRIMARY_BREED == BREEDDIM@PRIMARY_BREED",
+				"     && V2STAGEPETLIC@SPECIES == BREEDDIM@SPECIES,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> joinbreed",
+				"joinbreed, DATEDIM join(LIC_ISSUE_DATE == DT,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> joiningDate",
+				"joiningDate, MAXPETSK join(1==1,",
+				"     joinType:'cross',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> CrossJoin",
+				"CrossJoin select(mapColumn(",
+				"          JOB_EXC_ID,",
+				"          JOB_EXC_DT,",
+				"          LOCATION_SK,",
+				"          BREED_SK,",
+				"          DATE_SK = DATE_DIM_SK,",
+				"          PET_LIC_SK = MAXPETSK",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> selectColumns1",
+				"selectColumns1 keyGenerate(output(RowNum as long),",
+				"     startAt: 1L,",
+				"     stepValue: 1L) ~> surrogateKey1",
+				"surrogateKey1 derive(PET_LIC_SK = PET_LIC_SK +RowNum) ~> derivedColumn1",
+				"derivedColumn1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     stageInsert: true,",
+				"     mapColumn(",
+				"          JOB_EXC_ID,",
+				"          JOB_EXC_DT,",
+				"          LOCATION_SK,",
+				"          BREED_SK,",
+				"          DATE_SK,",
+				"          PET_LIC_SK",
+				"     )) ~> SinkintoFACT"
+			]
+		}
+	}
+}

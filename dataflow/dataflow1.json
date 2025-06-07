@@ -1,0 +1,105 @@
+{
+	"name": "dataflow1",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DelimitedText2",
+						"type": "DatasetReference"
+					},
+					"name": "reasTSVfile",
+					"description": "Imported Data from delimited Text"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "SnowflakeTable5",
+						"type": "DatasetReference"
+					},
+					"name": "sinkSnowflake"
+				}
+			],
+			"transformations": [
+				{
+					"name": "derivedColumn1"
+				},
+				{
+					"name": "PickCleanedColumns"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     Job_Id as string (\"10\")",
+				"}",
+				"source(output(",
+				"          License_Issue_Date as string,",
+				"          License_Number as string,",
+				"          Animals_Name as string,",
+				"          Species as string,",
+				"          Primary_Breed as string,",
+				"          Secondary_Breed as string,",
+				"          ZIP_Code as integer",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> reasTSVfile",
+				"reasTSVfile derive(LIC_ISSUE_DATE = toDate(License_Issue_Date, 'MMMM dd yyyy'),",
+				"          PRIMARY_BREED = {Primary_Breed},",
+				"          SECONDARY_BREED = iifNull(Secondary_Breed, 'Unknown'),",
+				"          ZIP_CODE = lpad(toString(ZIP_Code),5,'0'),",
+				"          SPECIES = upper(Species),",
+				"          LICENSE_NUMBER = toInteger(translate(License_Number,'S', '')),",
+				"          ANIMAL_NAME = translate(Animals_Name,'()[]' , ''),",
+				"          JOB_EXC_ID = $Job_Id,",
+				"          JOB_EXC_DT = currentDate()) ~> derivedColumn1",
+				"derivedColumn1 select(mapColumn(",
+				"          LIC_ISSUE_DATE,",
+				"          PRIMARY_BREED = derivedColumn1@PRIMARY_BREED,",
+				"          SECONDARY_BREED = derivedColumn1@SECONDARY_BREED,",
+				"          ZIP_CODE = derivedColumn1@ZIP_CODE,",
+				"          SPECIES = derivedColumn1@SPECIES,",
+				"          LICENSE_NUMBER = derivedColumn1@LICENSE_NUMBER,",
+				"          ANIMAL_NAME,",
+				"          JOB_EXC_ID,",
+				"          JOB_EXC_DT",
+				"     ),",
+				"     skipDuplicateMapInputs: false,",
+				"     skipDuplicateMapOutputs: false) ~> PickCleanedColumns",
+				"PickCleanedColumns sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          LIC_ISSUE_DATE as date,",
+				"          SECONDARY_BREED as string,",
+				"          ZIP_CODE as string,",
+				"          SPECIES as string,",
+				"          LICENSE_NUMBER as string,",
+				"          ANIMAL_NAME as string,",
+				"          JOB_EXC_ID as string,",
+				"          JOB_EXC_DT as date,",
+				"          PRIMARY_BREED as string",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     truncate:true,",
+				"     format: 'table',",
+				"     stageInsert: true,",
+				"     mapColumn(",
+				"          LIC_ISSUE_DATE,",
+				"          SECONDARY_BREED,",
+				"          ZIP_CODE,",
+				"          SPECIES,",
+				"          LICENSE_NUMBER,",
+				"          ANIMAL_NAME,",
+				"          JOB_EXC_ID,",
+				"          JOB_EXC_DT,",
+				"          PRIMARY_BREED",
+				"     )) ~> sinkSnowflake"
+			]
+		}
+	}
+}

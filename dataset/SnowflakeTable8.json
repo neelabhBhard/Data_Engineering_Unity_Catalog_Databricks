@@ -1,0 +1,17 @@
+{
+	"name": "SnowflakeTable8",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LOCATION_DIM",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "SnowflakeV2Table",
+		"schema": [],
+		"typeProperties": {
+			"schema": "TEMP_SCHEMA",
+			"table": "LOCATION_DIM"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

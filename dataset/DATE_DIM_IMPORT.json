@@ -1,0 +1,17 @@
+{
+	"name": "DATE_DIM_IMPORT",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "DATE_DIM_IMPORT",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "SnowflakeV2Table",
+		"schema": [],
+		"typeProperties": {
+			"schema": "TEMP_SCHEMA",
+			"table": "DATE_DIM"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
