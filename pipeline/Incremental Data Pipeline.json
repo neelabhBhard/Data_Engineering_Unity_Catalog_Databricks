@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Copy_Increm_Data",
+				"name": "Copy_Increment_Data",
 				"type": "Copy",
 				"dependsOn": [
 					{
@@ -31,7 +31,7 @@
 					"source": {
 						"type": "AzureSqlSource",
 						"sqlReaderQuery": {
-							"value": "SELECT * FROM SOURCE_CARS_DATA WHERE DATE_ID > @{activity('last_load').output} AND DATE_ID <= @{activity('current_load').output}",
+							"value": "SELECT * FROM SOURCE_CARS_DATA WHERE DATE_ID > '@{activity('last_load').output.value[0].last_load}' AND DATE_ID <= '@{activity('current_load').output.value[0].max_date}'",
 							"type": "Expression"
 						},
 						"queryTimeout": "02:00:00",
