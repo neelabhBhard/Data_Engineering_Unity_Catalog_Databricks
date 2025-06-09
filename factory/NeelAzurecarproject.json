@@ -1,0 +1,9 @@
+{
+	"name": "NeelAzurecarproject",
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "72f24172-32f5-451a-bf56-ca4f0f032c70",
+		"tenantId": "04f2f638-1c5a-4a7a-8929-c849b977721b"
+	}
+}
