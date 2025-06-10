@@ -1,0 +1,20 @@
+{
+	"name": "Storageaccount",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_Bronze",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "rawdata",
+				"fileSystem": "bronze"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": []
+	}
+}

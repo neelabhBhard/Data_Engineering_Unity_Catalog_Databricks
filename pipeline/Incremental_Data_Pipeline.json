@@ -31,26 +31,158 @@
 					"source": {
 						"type": "AzureSqlSource",
 						"sqlReaderQuery": {
-							"value": "SELECT * FROM SOURCE_CARS_DATA WHERE DATE_ID > '@{activity('Last_load').output.value[0].Last_load}' AND DATE_ID <= '@{activity('Current_Load').output.value[0].MAX_DATE}'",
+							"value": "SELECT * FROM SOURCE_CARS_DATA \nWHERE DATE_ID > '@{activity('Last_load').output.firstRow.last_load}' \nAND DATE_ID <= '@{activity('Current_Load').output.firstRow.MAX_DATE}'",
 							"type": "Expression"
 						},
 						"queryTimeout": "02:00:00",
 						"partitionOption": "None"
 					},
 					"sink": {
-						"type": "DelimitedTextSink",
+						"type": "ParquetSink",
 						"storeSettings": {
 							"type": "AzureBlobFSWriteSettings"
 						},
 						"formatSettings": {
-							"type": "DelimitedTextWriteSettings",
-							"quoteAllText": true,
-							"fileExtension": ".txt"
+							"type": "ParquetWriteSettings"
 						}
 					},
 					"enableStaging": false,
 					"translator": {
 						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"name": "BRANCH_ID",
+									"type": "String",
+									"physicalType": "varchar"
+								},
+								"sink": {
+									"name": "BRANCH_ID",
+									"type": "String",
+									"physicalType": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "DEALER_ID",
+									"type": "String",
+									"physicalType": "varchar"
+								},
+								"sink": {
+									"name": "DEALER_ID",
+									"type": "String",
+									"physicalType": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "MODEL_ID",
+									"type": "String",
+									"physicalType": "varchar"
+								},
+								"sink": {
+									"name": "MODEL_ID",
+									"type": "String",
+									"physicalType": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "REVENUE",
+									"type": "Int64",
+									"physicalType": "bigint"
+								},
+								"sink": {
+									"name": "REVENUE",
+									"type": "String",
+									"physicalType": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "UNITS_SOLD",
+									"type": "Int64",
+									"physicalType": "bigint"
+								},
+								"sink": {
+									"name": "UNITS_SOLD",
+									"type": "String",
+									"physicalType": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "DATE_ID",
+									"type": "String",
+									"physicalType": "varchar"
+								},
+								"sink": {
+									"name": "DATE_ID",
+									"type": "String",
+									"physicalType": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "DAY",
+									"type": "Int32",
+									"physicalType": "int"
+								},
+								"sink": {
+									"name": "DAY",
+									"type": "String",
+									"physicalType": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "MONTH",
+									"type": "Int32",
+									"physicalType": "int"
+								},
+								"sink": {
+									"name": "MONTH",
+									"type": "String",
+									"physicalType": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "YEAR",
+									"type": "Int32",
+									"physicalType": "int"
+								},
+								"sink": {
+									"name": "YEAR",
+									"type": "String",
+									"physicalType": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "BRANCHNAME",
+									"type": "String",
+									"physicalType": "varchar"
+								},
+								"sink": {
+									"name": "BRANCHNAME",
+									"type": "String",
+									"physicalType": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "DEALERNAME",
+									"type": "String",
+									"physicalType": "varchar"
+								},
+								"sink": {
+									"name": "DEALERNAME",
+									"type": "String",
+									"physicalType": "String"
+								}
+							}
+						],
 						"typeConversion": true,
 						"typeConversionSettings": {
 							"allowDataTruncation": true,
@@ -69,7 +201,7 @@
 				],
 				"outputs": [
 					{
-						"referenceName": "ds_bronze",
+						"referenceName": "Storageaccount",
 						"type": "DatasetReference"
 					}
 				]
@@ -129,6 +261,28 @@
 						}
 					}
 				}
+			},
+			{
+				"name": "Update_Water_Mark",
+				"type": "SqlServerStoredProcedure",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
+				"dependsOn": [
+					{
+						"activity": "Copy_Increm_Data",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": []
 			}
 		],
 		"annotations": []
