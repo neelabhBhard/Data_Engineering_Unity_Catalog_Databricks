@@ -124,4 +124,4 @@ Feel free to open issues or submit pull requests if you have suggestions for imp
 
 **Neelabh Bhard**
 - GitHub: [@neelabhBhard](https://github.com/neelabhBhard)
-- LinkedIn: [Connect with me](https://linkedin.com/in/your-profile)
+- LinkedIn: [Connect with me](https://www.linkedin.com/in/neelabhbhardwaj/)
